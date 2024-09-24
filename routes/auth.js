@@ -1,5 +1,4 @@
-// routes/auth.js
-
+// Import required modules
 const express = require('express');
 const router = express.Router();
 const knex = require('knex')(require('../knexfile').development);
@@ -57,6 +56,36 @@ router.post('/login', async (req, res) => {
   } catch (err) {
     console.error('Error logging in user:', err);
     res.status(500).json({ message: 'Error logging in user', error: err });
+  }
+});
+
+// Middleware for JWT authentication
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.sendStatus(401);
+
+  jwt.verify(token, SECRET_KEY, (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+}
+
+// Route to get user details
+router.get('/user', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const user = await knex('users').where({ id: userId }).first();
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({ id: user.id, username: user.username });
+  } catch (err) {
+    console.error('Error fetching user details:', err);
+    res.status(500).json({ message: 'Error fetching user details', error: err });
   }
 });
 

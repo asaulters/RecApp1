@@ -1,4 +1,3 @@
-// middleware/auth.js
 const jwt = require('jsonwebtoken');
 const SECRET_KEY = 'secret_key1'; // Ensure this is the same as the one used to sign the token
 
